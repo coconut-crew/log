@@ -30,6 +30,7 @@ export type Logger = {
 	trace: (Logger, template: string, ...any) -> (),
 
 	add_sink: (Logger, sink: LogSink) -> (),
+	add_enricher: (Logger, sink: LogSink) -> (),
 }
 
 export type LogConfiguration = {}
@@ -208,6 +209,16 @@ const function get_nodes(input: string): { Hole | Text }
 	return nodes
 end
 
+const function pipe_log(self: Logger, structured_log: LogEvent)
+	for _, enrich in self.enrichers do
+		enrich(structured_log)
+	end
+
+	for _, sink in self.sinks do
+		sink(structured_log)
+	end
+end
+
 const function log(
 	self: Logger,
 	level: LoggingLevel,
@@ -224,13 +235,7 @@ const function log(
 		properties = ctx,
 	}
 
-	for _, enrich in self.enrichers do
-		enrich(structured_log)
-	end
-
-	for _, sink in self.sinks do
-		sink(structured_log)
-	end
+	pipe_log(self, structured_log)
 end
 
 const function render(renderer: Renderer, log: LogEvent): string
@@ -308,6 +313,10 @@ const function add_sink(self: Logger, sink: LogSink)
 	table.insert(self.sinks, sink)
 end
 
+const function add_enricher(self: Logger, enricher: LogEnricher)
+	table.insert(self.sinks, enricher)
+end
+
 const function create_logger(p: {
 	enrichers: { LogEnricher }?,
 	sinks: { LogSink }?,
@@ -323,6 +332,7 @@ const function create_logger(p: {
 		trace = logger_trace,
 
 		add_sink = add_sink,
+		add_enricher = add_enricher,
 	}
 end
 
@@ -439,12 +449,27 @@ const function stdio_output(p: {
 	end
 end
 
+const function pipe(into: Logger)
+	return function(event: LogEvent)
+		const copy = table.clone(event)
+		copy.properties = if copy.properties
+			then table.clone(copy.properties)
+			else copy.properties
+
+		pipe_log(into, copy)
+	end
+end
+
 const default_logger = create_logger {}
+local current_logger = default_logger
 
 const oi = {
+	set_logger = function(logger: Logger) current_logger = logger end,
+
 	roblox_output = roblox_output,
 	roblox_structured_log_output = roblox_structured_log_sink,
 	stdio_output_sink = stdio_output,
+	pipe = pipe,
 
 	set_unix_timestamp_provider = function(provider: () -> number)
 		obtain_unix_timestamp_impl = provider
@@ -456,15 +481,15 @@ const oi = {
 
 	plain_text_renderer = plain_text_renderer,
 
-	info = function(template, ctx) logger_info(default_logger, template, ctx) end,
+	info = function(template, ctx) logger_info(current_logger, template, ctx) end,
 
-	warn = function(template, ctx) logger_warn(default_logger, template, ctx) end,
+	warn = function(template, ctx) logger_warn(current_logger, template, ctx) end,
 
-	error = function(template, ctx) logger_error(default_logger, template, ctx) end,
+	error = function(template, ctx) logger_error(current_logger, template, ctx) end,
 
-	debug = function(template, ctx) logger_debug(default_logger, template, ctx) end,
+	debug = function(template, ctx) logger_debug(current_logger, template, ctx) end,
 
-	trace = function(template, ctx) logger_trace(default_logger, template, ctx) end,
+	trace = function(template, ctx) logger_trace(current_logger, template, ctx) end,
 }
 
 return oi
