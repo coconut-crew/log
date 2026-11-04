@@ -1,0 +1,27 @@
+{
+  "luau-lsp.fflags.enableNewSolver": true,
+  "editor.detectIndentation": false,
+  "editor.insertSpaces": false,
+  "files.exclude": {
+    "**/.git": true,
+    "**/.svn": true,
+    "**/.hg": true,
+    "**/CVS": true,
+    "**/.DS_Store": true,
+    "**/Thumbs.db": true,
+    "**/roblox_packages": false,
+    "**/luau_packages": false,
+    "out": true,
+  },
+  "luau-lsp.require.mode": "relativeToFile",
+  "[luau]": {
+	"editor.formatOnSave": true
+  },
+
+  "[markdown]": {
+		"editor.wrappingStrategy": "simple",
+		"editor.wordWrap": "bounded",
+		"editor.wordWrapColumn": 80
+	},
+	"luau-lsp.sourcemap.rojoProjectFile": "default.project.json"
+}
