@@ -92,7 +92,6 @@ const function serialize(logproperties: Table)
 
 	const function serialize_key_value(value: unknown)
 		const type_value = type(value)
-		print(pos, type_value)
 
 		if type_value == "number" then
 			const is_integer = value == value // 1
