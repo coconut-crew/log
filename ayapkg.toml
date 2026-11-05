@@ -1,2 +1,4 @@
 name = "log"
-entry_point = "src/init.luau"
+monorepo = true
+
+packages = "packages/*"

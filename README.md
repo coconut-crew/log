@@ -26,3 +26,7 @@ this pipes all logs given to a logger to another logger when they come in.
 it can be added through `logger:add_sink(log.pipe(into))`. be aware of recursion, when a log gets piped to another logger, all enrichers and sinks will run again.
 
 it is recommended to use `log.set_unix_timestamp_provider`. by default, it is set to `os.time` in Luau, and `DateTime.now().UnixTimestampMillis` in Roblox. for other runtimes, it is recommended to invoke this function with your own provider.
+
+## logbook
+
+logbook is going to keep track of logs that users make. eventual consistency. we will have a custom reliability layer to make this work.
