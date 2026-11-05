@@ -396,14 +396,12 @@ const function read_properties(properties: buffer)
 
 			while true do
 				key, pos = read_value(pos)
-				print("key", key, pos)
 
 				if key == nil then
 					break
 				end
 
 				value, pos = read_value(pos)
-				print(value)
 
 				props[key] = value
 			end
