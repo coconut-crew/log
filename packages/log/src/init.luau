@@ -1,16 +1,14 @@
 local obtain_unix_timestamp_impl = if DateTime
-	then function() return DateTime.now().UnixTimestampMillis end
+	then function()
+		return DateTime.now().UnixTimestampMillis
+	end
 	else os.time
 
 export type LoggingLevel = | "trace" | "debug" | "error" | "warn" | "info"
 
-export type SourceKind = string
-
 export type LogEvent = {
 	level: LoggingLevel,
 	timestamp: number,
-	source_context: string?,
-	source_kind: SourceKind,
 	template: string,
 
 	properties: { [string]: any },
@@ -65,32 +63,40 @@ export type Hole = {
 	format: Format?,
 }
 
-const function char(c: string): number return string.byte(c) :: number end
+const function char(c: string): number
+	return string.byte(c) :: number
+end
 
 local pos = 0
 local len = 0
 local input = buffer.create(0)
 
 const function peek(): number
-	if pos == len then return 0 end
+	if pos == len then
+		return 0
+	end
 	return buffer.readu8(input, pos) :: any
 end
 
 const function peek_2(): number
-	if pos + 1 >= len then return 0 end
+	if pos + 1 >= len then
+		return 0
+	end
 	return buffer.readu8(input, pos + 1) :: any
 end
 
-const function bump() pos = math.min((pos + 1) :: any, len) end
+const function bump()
+	pos = math.min((pos + 1) :: any, len)
+end
 
 const function is_digit(c: number): boolean
-	return char "0" <= c and c <= char "9"
+	return char("0") <= c and c <= char("9")
 end
 
 const function is_alpha(c: number): boolean
-	return (char "a" <= c and c <= char "z")
-		or (char "A" <= c and c <= char "Z")
-		or c == char "_"
+	return (char("a") <= c and c <= char("z"))
+		or (char("A") <= c and c <= char("Z"))
+		or c == char("_")
 end
 
 const function read_format(): Format
@@ -100,7 +106,7 @@ const function read_format(): Format
 	const from = pos
 	while true do
 		c = peek()
-		if c == char "}" then
+		if c == char("}") then
 			break
 		else
 			bump()
@@ -125,14 +131,14 @@ const function read_hole(): Hole
 	while true do
 		c = peek()
 
-		if c == char ":" then
+		if c == char(":") then
 			name = buffer.readstring(input, from, pos - from)
 			format = read_format()
 		elseif is_alpha(c) then
 			bump()
 		elseif is_digit(c) then
 			bump()
-		elseif c == char "}" then
+		elseif c == char("}") then
 			if name == nil then
 				name = buffer.readstring(input, from, pos - from)
 			end
@@ -140,7 +146,7 @@ const function read_hole(): Hole
 			bump()
 			break
 		elseif c == 0 then
-			error "expected } but got eof"
+			error("expected } but got eof")
 		else
 			error(`cannot parse {c} as part of hole`)
 		end
@@ -170,7 +176,9 @@ const function parse(b: buffer)
 	local text_start_from = 0
 
 	const function output_text(): Text?
-		if text_start_from == pos then return nil end
+		if text_start_from == pos then
+			return nil
+		end
 
 		return {
 			kind = "text" :: "text",
@@ -183,11 +191,11 @@ const function parse(b: buffer)
 		const c: number = peek()
 		const l: number = peek_2()
 
-		if c == char "{" and l ~= char "{" then
+		if c == char("{") and l ~= char("{") then
 			table.insert(nodes, output_text())
 			table.insert(nodes, read_hole())
 			text_start_from = pos
-		elseif c == char "{" and l == char "{" then
+		elseif c == char("{") and l == char("{") then
 			bump()
 			bump()
 		else
@@ -203,7 +211,9 @@ end
 local CACHED_LOGS = setmetatable({}, { __mode = "vs" })
 
 const function get_nodes(input: string): { Hole | Text }
-	if CACHED_LOGS[input] then return CACHED_LOGS[input] end
+	if CACHED_LOGS[input] then
+		return CACHED_LOGS[input]
+	end
 	const nodes = parse(buffer.fromstring(input))
 	CACHED_LOGS[input] = nodes
 	return nodes
@@ -229,7 +239,6 @@ const function log(
 	const structured_log: LogEvent = {
 		level = level,
 		timestamp = obtain_unix_timestamp_impl(),
-		source_kind = "none",
 		template = template,
 
 		properties = ctx,
@@ -254,7 +263,9 @@ end
 const MAX_ELEMENTS = 10
 const nodes = {}
 const plain_text_renderer: Renderer = {
-	text = function(node: Text) return node.text end,
+	text = function(node: Text)
+		return node.text
+	end,
 	hole = function(node: Hole, value: unknown)
 		if node.prefix == "$" then
 			return tostring(value)
@@ -263,7 +274,9 @@ const plain_text_renderer: Renderer = {
 				table.insert(nodes, "{")
 				local length = 0
 				for key, value in value do
-					if #nodes > 0 then nodes[length] = nodes[length] .. "," end
+					if #nodes > 0 then
+						nodes[length] = nodes[length] .. ","
+					end
 					if length > MAX_ELEMENTS then
 						table.insert(nodes, "...")
 						break
@@ -293,9 +306,13 @@ const plain_text_renderer: Renderer = {
 	end,
 }
 
-const function logger_info(self, template, ctx) log(self, "info", template, ctx) end
+const function logger_info(self, template, ctx)
+	log(self, "info", template, ctx)
+end
 
-const function logger_warn(self, template, ctx) log(self, "warn", template, ctx) end
+const function logger_warn(self, template, ctx)
+	log(self, "warn", template, ctx)
+end
 
 const function logger_error(self, template, ctx)
 	log(self, "error", template, ctx)
@@ -353,7 +370,7 @@ const function roblox_output(p: {
 			elseif log.level == "info" then "INFO"
 			elseif log.level == "trace" then "trace"
 			elseif log.level == "warn" then "WARN"
-			else error "unknown log level"
+			else error("unknown log level")
 
 		const text = `{if p.prefix then `[{p.prefix}] ` else ""}[{tag}] {render(
 			plain_text_renderer,
@@ -375,18 +392,24 @@ const function roblox_output(p: {
 end
 
 const function roblox_structured_log_sink()
-	const LogService = game:GetService "LogService"
+	const LogService = game:GetService("LogService")
 
 	const cached_template_strings = setmetatable({}, { __mode = "kvs" })
 	const roblox_template_renderer: Renderer = {
-		hole = function(hole) return `\{{hole.name}\}` end,
-		text = function(text) return text.text end,
+		hole = function(hole)
+			return `\{{hole.name}\}`
+		end,
+		text = function(text)
+			return text.text
+		end,
 	}
 
 	const function get_template(log: LogEvent)
 		const cached_template = cached_template_strings[log.template]
 
-		if cached_template ~= nil then return cached_template end
+		if cached_template ~= nil then
+			return cached_template
+		end
 
 		const rendered = render(roblox_template_renderer, log)
 		cached_template_strings[log.template] = rendered
@@ -438,7 +461,7 @@ const function stdio_output(p: {
 			elseif log.level == "info" then `{BLUE}INFO{RESET}`
 			elseif log.level == "trace" then `{GRAY}TRACE{RESET}`
 			elseif log.level == "warn" then `{YELLOW}WARN{RESET}`
-			else error "unknown log level"
+			else error("unknown log level")
 
 		const text =
 			`{if p.prefix then `[{p.prefix}] ` else ""}[{tag}] {if p.include_timestamp
@@ -460,11 +483,13 @@ const function pipe(into: Logger)
 	end
 end
 
-const default_logger = create_logger {}
+const default_logger = create_logger({})
 local current_logger = default_logger
 
 const oi = {
-	set_logger = function(logger: Logger) current_logger = logger end,
+	set_logger = function(logger: Logger)
+		current_logger = logger
+	end,
 
 	roblox_output = roblox_output,
 	roblox_structured_log_output = roblox_structured_log_sink,
@@ -476,20 +501,32 @@ const oi = {
 	end,
 
 	create = create_logger,
-	default = function() return default_logger end,
+	default = function()
+		return default_logger
+	end,
 	render = render,
 
 	plain_text_renderer = plain_text_renderer,
 
-	info = function(template, ctx) logger_info(current_logger, template, ctx) end,
+	info = function(template, ctx)
+		logger_info(current_logger, template, ctx)
+	end,
 
-	warn = function(template, ctx) logger_warn(current_logger, template, ctx) end,
+	warn = function(template, ctx)
+		logger_warn(current_logger, template, ctx)
+	end,
 
-	error = function(template, ctx) logger_error(current_logger, template, ctx) end,
+	error = function(template, ctx)
+		logger_error(current_logger, template, ctx)
+	end,
 
-	debug = function(template, ctx) logger_debug(current_logger, template, ctx) end,
+	debug = function(template, ctx)
+		logger_debug(current_logger, template, ctx)
+	end,
 
-	trace = function(template, ctx) logger_trace(current_logger, template, ctx) end,
+	trace = function(template, ctx)
+		logger_trace(current_logger, template, ctx)
+	end,
 }
 
 return oi

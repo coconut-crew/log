@@ -26,7 +26,7 @@ const I32_LOWER_BOUNDS = -2 ^ 31
 const REG_TYPE_TABLE = 0
 const REG_TYPE_LONGSTRING = 1
 
-const TYPE_NIL = 0
+const TYPE_STOP = 0
 const TYPE_NUMBER = 1
 const TYPE_STRING = 2
 const TYPE_TRUE = 3
@@ -36,14 +36,13 @@ const TYPE_LONGSTRING = 6
 const TYPE_FUNCTION = 7
 const TYPE_CFUNCTION = 8
 const TYPE_VECTOR = 9
+const TYPE_NIL = 10
 
-const TYPE_INT8 = 10
-const TYPE_INT16 = 11
-const TYPE_INT32 = 12
+const TYPE_INT8 = 11
+const TYPE_INT16 = 12
+const TYPE_INT32 = 13
 
 const TYPE_MISC = 16
-
-const TYPE_STOP = 255
 
 const SYMBOL_DOES_NOT_EXIST = table.freeze({ err = "doesnotexist" })
 

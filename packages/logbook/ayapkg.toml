@@ -1,2 +1,5 @@
 name = "logbook"
 entry_point = "src/init.luau"
+
+[dependency.log]
+from_path = "../log"
