@@ -273,29 +273,33 @@ const function serialize(logproperties: Table)
 	return copy
 end
 
-const function read_properties(properties: buffer)
-	const b = properties
+const function find_registry_offset(
+	b: buffer,
+	idx: number,
+	from: number?
+): number?
+	local pos = from or 0
 
-	const function find_registry_offset(idx: number): number?
-		local pos = 0
+	while idx > 0 or pos > buffer.len(b) do
+		const registry_type = buffer.readu8(b, pos)
 
-		while idx > 0 or pos > buffer.len(b) do
-			const registry_type = buffer.readu8(b, pos)
-
-			if registry_type == REG_TYPE_TABLE then
-				const skip_ahead_to = buffer.readu32(b, pos + 1)
-				pos = skip_ahead_to
-			elseif registry_type == REG_TYPE_LONGSTRING then
-				const skip_ahead_bytes = buffer.readu16(b, pos + 1)
-				pos += skip_ahead_bytes + 3
-			end
-
-			idx -= 1 -- decrement idx, when idx reaches 0 we reached the desired offset
+		if registry_type == REG_TYPE_TABLE then
+			const skip_ahead_to = buffer.readu32(b, pos + 1)
+			pos = skip_ahead_to
+		elseif registry_type == REG_TYPE_LONGSTRING then
+			const skip_ahead_bytes = buffer.readu16(b, pos + 1)
+			pos += skip_ahead_bytes + 3
 		end
 
-		-- if the idx is not zero, we did not find it.
-		return if idx == 0 then pos else nil
+		idx -= 1 -- decrement idx, when idx reaches 0 we reached the desired offset
 	end
+
+	-- if the idx is not zero, we did not find it.
+	return if idx == 0 then pos else nil
+end
+
+const function read_properties(properties: buffer)
+	const b = properties
 
 	const function read_value(offset: number): unknown
 		const type_of = buffer.readu8(b, offset)
@@ -376,7 +380,7 @@ const function read_properties(properties: buffer)
 	end
 
 	const function read_registry_value(registry_idx: number)
-		const offset = find_registry_offset(registry_idx)
+		const offset = find_registry_offset(b, registry_idx)
 
 		if offset == nil then
 			return SYMBOL_DOES_NOT_EXIST
@@ -416,6 +420,7 @@ const function read_properties(properties: buffer)
 end
 
 return {
+	find_registry_offset = find_registry_offset,
 	serialize = serialize,
 	read = read_properties,
 }

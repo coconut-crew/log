@@ -5,11 +5,11 @@ const log = require("@pkgs/log")
 export type Level = log.LoggingLevel
 export type SerializedLogEvent = {
 	read level: Level,
-	read template: string,
+	template: string,
 	read timestamp: number,
 	read source: number,
 
-	properties: { b: buffer, upto: number },
+	properties: buffer,
 }
 
 const SOFT_CAP_LOGS = 5_000
