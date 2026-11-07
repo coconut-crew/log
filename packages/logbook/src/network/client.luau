@@ -24,6 +24,8 @@ erroneous processes 3
 	in this case, the client should request the previous log again
 
 ? it might be interesting to look into doing bitpacking, to expand the allowed number of templates to 2^20 or 2^24
+todo: we still need to request for missing packets.
+
 ]]
 
 const logbook = require("../logbook")
